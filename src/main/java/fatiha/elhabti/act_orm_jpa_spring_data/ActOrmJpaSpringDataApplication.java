@@ -3,6 +3,9 @@ package fatiha.elhabti.act_orm_jpa_spring_data;
 import fatiha.elhabti.act_orm_jpa_spring_data.entities.*;
 import fatiha.elhabti.act_orm_jpa_spring_data.repositories.PatientRepository;
 import fatiha.elhabti.act_orm_jpa_spring_data.service.IHospitalServiceImpl;
+import fatiha.elhabti.act_orm_jpa_spring_data.user.entities.Role;
+import fatiha.elhabti.act_orm_jpa_spring_data.user.entities.User;
+import fatiha.elhabti.act_orm_jpa_spring_data.user.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,7 +38,7 @@ public class ActOrmJpaSpringDataApplication {
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(IHospitalServiceImpl service) {
+    CommandLineRunner commandLineRunner(IHospitalServiceImpl service, UserService userService) {
         return args -> {
 
             // Ajouter des patients
@@ -89,6 +92,41 @@ public class ActOrmJpaSpringDataApplication {
             });
 
 
+            // the block of @ManyToMany
+
+            User user1 = new User();
+            user1.setUserName("xavier");
+            user1.setPassword("X12345");
+            userService.addNewUser(user1);
+
+            User user2 = new User();
+            user2.setUserName("admin1");
+            user2.setPassword("V45678");
+            userService.addNewUser(user2);
+
+            Stream.of("STUDENT", "ADMIN", "USER").forEach(name -> {
+                Role role = new Role();
+                role.setRoleName(name);
+                userService.addNewRole(role);
+            });
+
+
+            userService.addRoleToUser("xavier","STUDENT");
+            userService.addRoleToUser("xavier","USER");
+            userService.addRoleToUser("admin1","ADMIN");
+            userService.addRoleToUser("admin1","USER");
+
+            try {
+                User user = userService.authenticate("xavier","X12345");
+                System.out.println(user.getUserId());
+                System.out.println(user.getUserName());
+                System.out.println("Roles => ");
+                Stream.of(user.getRoles()).forEach(role -> {
+                    System.out.println(role);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
 
           };
